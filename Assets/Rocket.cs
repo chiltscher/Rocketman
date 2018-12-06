@@ -5,8 +5,14 @@ using UnityEngine;
 
 public class Rocket : MonoBehaviour {
 
+
     Rigidbody rigidbody;
     AudioSource engineSound;
+
+    [SerializeField] float mainThrust = 100f;
+    [SerializeField] float rcsThrust = 150f;
+    [SerializeField] float adjustThrust = .5f;
+
 
 	// Use this for initialization
 	void Start () {
@@ -16,36 +22,70 @@ public class Rocket : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        ProcessInput();
-	}
+        Thrust();
+        Rotate();
+        ControlJets();
+    }
 
-    private void ProcessInput()
+    private void ControlJets()
     {
-        if(Input.GetKey(KeyCode.Space))
+        // Control jets
+        if (Input.GetKey(KeyCode.Q))
         {
-            rigidbody.AddRelativeForce(Vector3.up);
-            engineSound.pitch = 2.0F;
-
-        } else
-        {
-            engineSound.pitch = 1.0F;
-        }
-        if(Input.GetKey(KeyCode.A))
-        {
-            transform.Rotate(Vector3.forward);
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            transform.Rotate(Vector3.back);
-        }
-        // Steuerdüsen
-        if(Input.GetKey(KeyCode.Q))
-        {
-            rigidbody.AddRelativeForce(Vector3.left);
+            rigidbody.AddRelativeForce(Vector3.right * adjustThrust);
         }
         else if (Input.GetKey(KeyCode.E))
         {
-            rigidbody.AddRelativeForce(Vector3.right);
+            rigidbody.AddRelativeForce(Vector3.left * adjustThrust);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        switch(collision.gameObject.tag)
+        {
+            case "Friendly":
+                {
+                    print("All right!");
+                    break;
+                }
+            case "Obstacle":
+                {
+                    print("Booooom");
+                    break;
+                }
+        }
+    }
+
+    private void Rotate()
+    {
+        rigidbody.freezeRotation = true;
+        // framerate dependent
+        float rotationSpeed = rcsThrust * Time.deltaTime;
+
+
+        if (Input.GetKey(KeyCode.A))
+        {
+            transform.Rotate(Vector3.forward * rotationSpeed);
+        }
+        else if (Input.GetKey(KeyCode.D))
+        {
+            transform.Rotate(-Vector3.forward * rotationSpeed);
+        }
+
+        rigidbody.freezeRotation = false;
+    }
+
+    private void Thrust()
+    {
+        if (Input.GetKey(KeyCode.Space))
+        {
+            rigidbody.AddRelativeForce(Vector3.up * mainThrust);
+            engineSound.pitch = 2.0F;
+        }
+        else
+        {
+            engineSound.pitch = 1.0F;
         }
     }
 }
